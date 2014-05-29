@@ -1,5 +1,19 @@
 Revision history for Perl extension File::NFSLock.
 
+1.21  Jul 13 17:00 2011
+        - Various patches by Chorny at cpan dot org
+          and fREW frioux at gmail dot com:
+        - Windows NTFS compatibility fixes.
+        - Allow PID to be negative.
+        - Lexically scope temp file handles to
+          reduce changes of memory leak and
+          avoid unintentional glob clobberation.
+        - Security fix: 3 arg open().
+        - Repair test suites logics.
+        - Fixed infinite freezing on Strawberry Perl v5.10.0.
+        - Fixed infinite freezing on ActiveState Perl v5.12.1.
+        - Sorry for the past 8 years of suffering.
+
 1.20  May 13 12:00 2003
         - Avoid double reverting signal handlers when
           unlock() is explicitly called instead of

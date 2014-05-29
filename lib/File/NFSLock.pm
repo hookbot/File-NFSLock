@@ -25,25 +25,25 @@
 package File::NFSLock;
 
 use strict;
-use Exporter ();
-use vars qw(@ISA @EXPORT_OK $VERSION $TYPES
-            $LOCK_EXTENSION $SHARE_BIT $HOSTNAME $errstr
-            $graceful_sig @CATCH_SIGS);
+use warnings;
+
 use Carp qw(croak confess);
+our $errstr;
+use base 'Exporter';
+our @EXPORT_OK = qw(uncache);
 
-@ISA = qw(Exporter);
-@EXPORT_OK = qw(uncache);
-
-$VERSION = '1.20';
+our $VERSION = '1.21';
 
 #Get constants, but without the bloat of
 #use Fcntl qw(LOCK_SH LOCK_EX LOCK_NB);
-sub LOCK_SH {1}
-sub LOCK_EX {2}
-sub LOCK_NB {4}
+use constant {
+   LOCK_SH => 1,
+   LOCK_EX => 2,
+   LOCK_NB => 4,
+};
 
 ### Convert lock_type to a number
-$TYPES = {
+our $TYPES = {
   BLOCKING    => LOCK_EX,
   BL          => LOCK_EX,
   EXCLUSIVE   => LOCK_EX,
@@ -53,9 +53,9 @@ $TYPES = {
   SHARED      => LOCK_SH,
   SH          => LOCK_SH,
 };
-$LOCK_EXTENSION = '.NFSLock'; # customizable extension
-$HOSTNAME = undef;
-$SHARE_BIT = 1;
+our $LOCK_EXTENSION = '.NFSLock'; # customizable extension
+our $HOSTNAME = undef;
+our $SHARE_BIT = 1;
 
 ###----------------------------------------------------------------###
 
@@ -66,7 +66,7 @@ my $graceful_sig = sub {
   exit;
 };
 
-@CATCH_SIGS = qw(TERM INT);
+our @CATCH_SIGS = qw(TERM INT);
 
 sub new {
   $errstr = undef;
@@ -107,7 +107,7 @@ sub new {
   ### need the hostname
   if( !$HOSTNAME ){
     require Sys::Hostname;
-    $HOSTNAME = &Sys::Hostname::hostname();
+    $HOSTNAME = Sys::Hostname::hostname();
   }
 
   ### quick usage check
@@ -160,8 +160,9 @@ sub new {
 
     ### If lock exists and is readable, see who is mooching on the lock
 
+    my $fh;
     if ( -e $self->{lock_file} &&
-         open (_FH,"+<$self->{lock_file}") ){
+         open ($fh,'+<', $self->{lock_file}) ){
 
       my @mine = ();
       my @them = ();
@@ -170,8 +171,8 @@ sub new {
       my $has_lock_exclusive = !((stat _)[2] & $SHARE_BIT);
       my $try_lock_exclusive = !($self->{lock_type} & LOCK_SH);
 
-      while(defined(my $line=<_FH>)){
-        if ($line =~ /^$HOSTNAME (\d+) /) {
+      while(defined(my $line=<$fh>)){
+        if ($line =~ /^$HOSTNAME (-?\d+) /) {
           my $pid = $1;
           if ($pid == $$) {       # This is me.
             push @mine, $line;
@@ -198,10 +199,10 @@ sub new {
 
         ### Rescan in case lock contents were modified between time stale lock
         ###  was discovered and lockfile lock was acquired.
-        seek (_FH, 0, 0);
+        seek ($fh, 0, 0);
         my $content = '';
-        while(defined(my $line=<_FH>)){
-          if ($line =~ /^$HOSTNAME (\d+) /) {
+        while(defined(my $line=<$fh>)){
+          if ($line =~ /^$HOSTNAME (-?\d+) /) {
             my $pid = $1;
             next if (!kill 0, $pid);  # Skip dead locks from this host
           }
@@ -210,18 +211,18 @@ sub new {
 
         ### Save any valid locks or wipe file.
         if( length($content) ){
-          seek     _FH, 0, 0;
-          print    _FH $content;
-          truncate _FH, length($content);
-          close    _FH;
+          seek     $fh, 0, 0;
+          print    $fh $content;
+          truncate $fh, length($content);
+          close    $fh;
         }else{
-          close _FH;
+          close $fh;
           unlink $self->{lock_file};
         }
 
       ### No "dead" or stale locks found.
       } else {
-        close _FH;
+        close $fh;
       }
 
       ### If attempting to acquire the same type of lock
@@ -308,10 +309,9 @@ sub create_magic ($;$) {
   my $self = shift;
   my $append_file = shift || $self->{rand_file};
   $self->{lock_line} ||= "$HOSTNAME $self->{lock_pid} ".time()." ".int(rand()*10000)."\n";
-  local *_FH;
-  open (_FH,">>$append_file") or do { $errstr = "Couldn't open \"$append_file\" [$!]"; return undef; };
-  print _FH $self->{lock_line};
-  close _FH;
+  open (my $fh,'>>', $append_file) or do { $errstr = "Couldn't open \"$append_file\" [$!]"; return undef; };
+  print $fh $self->{lock_line};
+  close $fh;
   return 1;
 }
 
@@ -394,8 +394,8 @@ sub do_unlock_shared ($) {
   my $lock = new File::NFSLock ($lock_file,LOCK_EX,62,60);
 
   ### get the handle on the lock file
-  local *_FH;
-  if( ! open (_FH,"+<$lock_file") ){
+  my $fh;
+  if( ! open ($fh,'+<', $lock_file) ){
     if( ! -e $lock_file ){
       return 1;
     }else{
@@ -405,21 +405,21 @@ sub do_unlock_shared ($) {
 
   ### read existing file
   my $content = '';
-  while(defined(my $line=<_FH>)){
+  while(defined(my $line=<$fh>)){
     next if $line eq $lock_line;
     $content .= $line;
   }
 
   ### other shared locks exist
   if( length($content) ){
-    seek     _FH, 0, 0;
-    print    _FH $content;
-    truncate _FH, length($content);
-    close    _FH;
+    seek     $fh, 0, 0;
+    print    $fh $content;
+    truncate $fh, length($content);
+    close    $fh;
 
   ### only I exist
   }else{
-    close _FH;
+    close $fh;
     unlink $lock_file;
   }
 
@@ -478,8 +478,8 @@ sub newpid {
     $self->do_unlock_shared;
     # Create signal file to notify parent that
     # the lock_line entry has been delegated.
-    open (_FH, ">$self->{lock_file}.fork");
-    close(_FH);
+    open (my $fh, '>', "$self->{lock_file}.fork");
+    close($fh);
   }
 }
 
