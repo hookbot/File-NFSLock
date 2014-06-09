@@ -1,11 +1,13 @@
 # Lock Test with fatal error (die)
 
-use Test;
+use strict;
+use warnings;
+
+use Test::More tests => 9;
 use File::NFSLock;
 use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC LOCK_EX);
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
-plan tests => 9;
 
 my $datafile = "testfile.dat";
 
@@ -13,14 +15,15 @@ my $datafile = "testfile.dat";
 unlink ("$datafile$File::NFSLock::LOCK_EXTENSION");
 
 # Create a blank file
-sysopen ( FH, $datafile, O_CREAT | O_RDWR | O_TRUNC );
-close (FH);
+sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );
+close ($fh);
 # test 1
 ok (-e $datafile && !-s _);
 
 
 # test 2
-ok (pipe(RD1,WR1)); # Connected pipe for child1
+my ($rd1, $wr1);
+ok (pipe($rd1, $wr1)); # Connected pipe for child1
 
 my $pid = fork;
 if (!$pid) {
@@ -30,14 +33,14 @@ if (!$pid) {
     file => $datafile,
     lock_type => LOCK_EX,
   };
-  print WR1 !!$lock; # Send boolean success status down pipe
-  close(WR1); # Signal to parent that the Blocking lock is done
-  close(RD1);
+  print $wr1 !!$lock; # Send boolean success status down pipe
+  close($wr1); # Signal to parent that the Blocking lock is done
+  close($wr1);
   if ($lock) {
-    sysopen(FH, $datafile, O_RDWR | O_TRUNC);
+    sysopen(my $fh, $datafile, O_RDWR | O_TRUNC);
     # And then put a magic word into the file
-    print FH "exclusive\n";
-    close FH;
+    print $fh "exclusive\n";
+    close $fh;
     open(STDERR,">/dev/null");
     die "I will die while lock is still aquired";
   }
@@ -46,10 +49,10 @@ if (!$pid) {
 
 # test 3
 ok 1; # Fork successful
-close (WR1);
+close ($wr1);
 # Waiting for child1 to finish its lock status
-my $child1_lock = <RD1>;
-close (RD1);
+my $child1_lock = <$rd1>;
+close ($rd1);
 # Report status of the child1_lock.
 # It should have been successful
 # test 4
@@ -60,7 +63,8 @@ ok ($child1_lock);
 ok (wait);
 
 # test 6
-ok (pipe(RD2,WR2)); # Connected pipe for child2
+my ($rd2, $wr2);
+ok (pipe($rd2, $wr2)); # Connected pipe for child2
 if (!fork) {
   # The last lock died, so this should aquire fine.
   my $lock = new File::NFSLock {
@@ -69,36 +73,36 @@ if (!fork) {
     blocking_timeout => 10,
   };
   if ($lock) {
-    sysopen(FH, $datafile, O_RDWR | O_TRUNC);
+    sysopen(my $fh, $datafile, O_RDWR | O_TRUNC);
     # Immediately put the magic word into the file
-    print FH "lock2\n";
-    truncate (FH, tell FH);
-    close FH;
+    print $fh "lock2\n";
+    truncate ($fh, tell $fh);
+    close $fh;
   }
-  print WR2 !!$lock; # Send boolean success status down pipe
-  close(WR2); # Signal to parent that the Blocking lock is done
-  close(RD2);
+  print $wr2 !!$lock; # Send boolean success status down pipe
+  close($wr2); # Signal to parent that the Blocking lock is done
+  close($rd2);
   exit; # Release this new lock
 }
 # test 7
 ok 1; # Fork successful
-close (WR2);
+close ($wr2);
 
 # Waiting for child2 to finish its lock status
-my $child2_lock = <RD2>;
-close (RD2);
+my $child2_lock = <$rd2>;
+close ($rd2);
 # Report status of the child2_lock.
 # This should have been successful.
 # test 8
 ok ($child2_lock);
 
 # Load up whatever the file says now
-sysopen(FH, $datafile, O_RDONLY);
+sysopen(my $fh2, $datafile, O_RDONLY);
 
-$_ = <FH>;
+$_ = <$fh2>;
 # test 9
 ok /lock2/;
-close FH;
+close $fh2;
 
 # Wipe the temporary file
 unlink $datafile;

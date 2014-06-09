@@ -4,12 +4,13 @@
 # an exclusive lock multiple times for the same file.
 
 use strict;
-use Test;
+use warnings;
+
+use Test::More tests => 5;
 use File::NFSLock;
 use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC O_APPEND LOCK_EX LOCK_SH LOCK_NB);
 
 $| = 1;
-plan tests => 5;
 
 my $datafile = "testfile.dat";
 
@@ -17,8 +18,8 @@ my $datafile = "testfile.dat";
 unlink ("$datafile$File::NFSLock::LOCK_EXTENSION");
 
 # Create a blank file
-sysopen ( FH, $datafile, O_CREAT | O_RDWR | O_TRUNC );
-close (FH);
+sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );
+close ($fh);
 ok (-e $datafile && !-s _);
 
 
@@ -30,9 +31,9 @@ my $lock1 = new File::NFSLock {
 
 ok ($lock1);
 
-sysopen(FH, $datafile, O_RDWR | O_APPEND);
-print FH "lock1\n";
-close FH;
+sysopen(my $fh2, $datafile, O_RDWR | O_APPEND);
+print $fh2 "lock1\n";
+close $fh2;
 
 my $lock2 = new File::NFSLock {
   file => $datafile,
@@ -42,17 +43,17 @@ my $lock2 = new File::NFSLock {
 
 ok ($lock2);
 
-sysopen(FH, $datafile, O_RDWR | O_APPEND);
-print FH "lock2\n";
-close FH;
+sysopen(my $fh3, $datafile, O_RDWR | O_APPEND);
+print $fh3 "lock2\n";
+close $fh3;
 
 # Load up whatever the file says now
-sysopen(FH, $datafile, O_RDONLY);
-$_ = <FH>;
+sysopen(my $fh4, $datafile, O_RDONLY);
+$_ = <$fh4>;
 ok /lock1/;
-$_ = <FH>;
+$_ = <$fh4>;
 ok /lock2/;
-close FH;
+close $fh4;
 
 # Wipe the temporary file
 unlink $datafile;

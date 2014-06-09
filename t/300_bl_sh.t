@@ -1,6 +1,14 @@
 # Blocking Shared Lock Test
+use strict;
+use warnings;
 
-use Test;
+use Test::More;
+if( $^O eq 'MSWin32' ) {
+  plan skip_all => 'Tests fail on Win32 due to forking';
+}
+else {
+  plan tests => 13+3*20;
+}
 use File::NFSLock;
 use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC O_APPEND LOCK_EX LOCK_NB LOCK_SH);
 
@@ -9,19 +17,18 @@ my $m = 20;
 my $shared_delay = 5;
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
-plan tests => (13 + 3*$m);
 
 my $datafile = "testfile.dat";
 
 # Create a blank file
-sysopen ( FH, $datafile, O_CREAT | O_RDWR | O_TRUNC );
-close (FH);
+sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );
+close ($fh);
 # test 1
 ok (-e $datafile && !-s _);
 
 
-# test 2
-ok (pipe(RD1,WR1)); # Connected pipe for child1
+my ($rd1, $wr1);
+ok (pipe($rd1, $wr1)); # Connected pipe for child1
 if (!fork) {
   # Child #1 process
   # Obtain exclusive lock to block the shared attempt later
@@ -29,32 +36,32 @@ if (!fork) {
     file => $datafile,
     lock_type => LOCK_EX,
   };
-  print WR1 !!$lock; # Send boolean success status down pipe
-  close(WR1); # Signal to parent that the Blocking lock is done
-  close(RD1);
+  print $wr1 !!$lock; # Send boolean success status down pipe
+  close($wr1); # Signal to parent that the Blocking lock is done
+  close($rd1);
   if ($lock) {
     sleep 2;  # hold the lock for a moment
-    sysopen(FH, $datafile, O_RDWR | O_TRUNC);
+    sysopen(my $fh, $datafile, O_RDWR | O_TRUNC);
     # And then put a magic word into the file
-    print FH "exclusive\n";
-    close FH;
+    print $fh "exclusive\n";
+    close $fh;
   }
   exit;
 }
 # test 3
 ok 1; # Fork successful
-close (WR1);
+close ($wr1);
 # Waiting for child1 to finish its lock status
-my $child1_lock = <RD1>;
-close (RD1);
+my $child1_lock = <$rd1>;
+close ($rd1);
 # Report status of the child1_lock.
 # It should have been successful
 # test 4
 ok ($child1_lock);
 
 
-# test 5
-ok (pipe(RD2,WR2)); # Connected pipe for child2
+my ($rd2, $wr2);
+ok (pipe($rd2, $wr2)); # Connected pipe for child2
 if (!fork) {
   # This should block until the exclusive lock is done
   my $lock = new File::NFSLock {
@@ -62,11 +69,11 @@ if (!fork) {
     lock_type => LOCK_SH,
   };
   if ($lock) {
-    sysopen(FH, $datafile, O_RDWR | O_TRUNC);
+    sysopen(my $fh, $datafile, O_RDWR | O_TRUNC);
     # Immediately put the magic word into the file
-    print FH "shared\n";
-    truncate (FH, tell FH);
-    close FH;
+    print $fh "shared\n";
+    truncate ($fh, tell $fh);
+    close $fh;
     # Normally shared locks never modify the contents because
     # of the race condition.  (The last one to write wins.)
     # But in this case, the parent will wait until the lock
@@ -76,9 +83,9 @@ if (!fork) {
     # This is also a good test to make sure that other shared
     # locks can still be obtained simultaneously.
   }
-  print WR2 !!$lock; # Send boolean success status down pipe
-  close(WR2); # Signal to parent that the Blocking lock is done
-  close(RD2);
+  print $wr2 !!$lock; # Send boolean success status down pipe
+  close($wr2); # Signal to parent that the Blocking lock is done
+  close($rd2);
   # Then hold this shared lock for a moment
   # while other shared locks are attempted
   sleep($shared_delay*2);
@@ -86,10 +93,10 @@ if (!fork) {
 }
 # test 6
 ok 1; # Fork successful
-close (WR2);
+close ($wr2);
 # Waiting for child2 to finish its lock status
-my $child2_lock = <RD2>;
-close (RD2);
+my $child2_lock = <$rd2>;
+close ($rd2);
 # Report status of the child2_lock.
 # This should have eventually been successful.
 # test 7
@@ -110,7 +117,8 @@ $SIG{ALRM} = sub {
 
 # Use pipe to read lock success status from children
 # test 8
-ok (pipe(RD3,WR3));
+my ($rd3, $wr3);
+ok (pipe($rd3, $wr3));
 
 # Wait a few seconds less than if all locks were
 # aquired asyncronously to ensure that they overlap.
@@ -125,15 +133,15 @@ for (my $i = 0; $i < $m ; $i++) {
       lock_type => LOCK_SH,
     };
     # Send boolean success status down pipe
-    print WR3 !!$lock,"\n";
-    close(WR3);
+    print $wr3 !!$lock,"\n";
+    close($wr3);
     if ($lock) {
       sleep $shared_delay;  # Hold the shared lock for a moment
       # Appending should always be safe across NFS
-      sysopen(FH, $datafile, O_RDWR | O_APPEND);
+      sysopen(my $fh, $datafile, O_RDWR | O_APPEND);
       # Put one line to signal the lock was successful.
-      print FH "1\n";
-      close FH;
+      print $fh "1\n";
+      close $fh;
       $lock->unlock();
     } else {
       warn "Lock [$i] failed!";
@@ -143,22 +151,22 @@ for (my $i = 0; $i < $m ; $i++) {
 }
 
 # Parent process never writes to pipe
-close(WR3);
+close($wr3);
 
 
 # There were $m children attempting the shared locks.
 for (my $i = 0; $i < $m ; $i++) {
   # Report status of each lock attempt.
-  my $got_shared_lock = <RD3>;
+  my $got_shared_lock = <$rd3>;
   # test 9 .. 8+$m
   ok $got_shared_lock;
 }
 
 # There should not be anything left in the pipe.
-my $extra = <RD3>;
+my $extra = <$rd3>;
 # test 9 + $m
 ok !$extra;
-close (RD3);
+close ($rd3);
 
 # If we made it here, then it must have been faster
 # than the timeout.  So reset the timer.
@@ -176,21 +184,21 @@ for (my $i = 0; $i < $m + 2 ; $i++) {
 }
 
 # Load up whatever the file says now
-sysopen(FH, $datafile, O_RDONLY);
+sysopen(my $fh2, $datafile, O_RDONLY);
 
 # The first line should say "shared" if child2 really
 # waited for child1's exclusive lock to finish.
-$_ = <FH>;
+$_ = <$fh2>;
 # test 13 + 2*$m
 ok /shared/;
 
 for (my $i = 0; $i < $m ; $i++) {
-  $_ = <FH>;
+  $_ = <$fh2>;
   chomp;
   # test 14+2*$m .. 13+3*$m
-  ok $_, 1;
+  is $_, 1;
 }
-close FH;
+close $fh2;
 
 # Wipe the temporary file
 unlink $datafile;

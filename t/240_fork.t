@@ -4,12 +4,13 @@
 # allow a parent to delegate the lock to its child.
 
 use strict;
-use Test;
+use warnings;
+
+use Test::More tests => 5;
 use File::NFSLock;
 use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC O_APPEND LOCK_EX LOCK_SH LOCK_NB);
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
-plan tests => 5;
 
 my $datafile = "testfile.dat";
 
@@ -17,8 +18,8 @@ my $datafile = "testfile.dat";
 unlink ("$datafile$File::NFSLock::LOCK_EXTENSION");
 
 # Create a blank file
-sysopen ( FH, $datafile, O_CREAT | O_RDWR | O_TRUNC );
-close (FH);
+sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );
+close ($fh);
 ok (-e $datafile && !-s _);
 
 if (1) {
