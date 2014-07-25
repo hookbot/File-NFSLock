@@ -486,6 +486,8 @@ sub newpid {
 1;
 
 
+=pod
+
 =head1 NAME
 
 File::NFSLock - perl module to do NFS (or not) locking
@@ -620,6 +622,8 @@ and do_lock is attempted again.  If the stale_lock_timeout is set to low, a
 recursion load could exist so do_lock will only recurse 10 times (this is only
 a problem if the stale_lock_timeout is set too low -- on the order of one or two
 seconds).
+
+=back
 
 =head1 METHODS
 

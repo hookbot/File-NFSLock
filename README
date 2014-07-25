@@ -119,127 +119,117 @@ PARAMETERS
         seconds).
 
 METHODS
-        After the $lock object is instantiated with new, as outlined above,
-        some methods may be used for additional functionality.
+    After the $lock object is instantiated with new, as outlined above, some
+    methods may be used for additional functionality.
 
   unlock
+      $lock->unlock;
 
-          $lock->unlock;
-
-        This method may be used to explicitly release a lock that is
-        aquired. In most cases, it is not necessary to call unlock directly
-        since it will implicitly be called when the object leaves whatever
-        scope it is in.
+    This method may be used to explicitly release a lock that is aquired. In
+    most cases, it is not necessary to call unlock directly since it will
+    implicitly be called when the object leaves whatever scope it is in.
 
   uncache
+      $lock->uncache;
+      $lock->uncache("otherfile1");
+      uncache("otherfile2");
 
-          $lock->uncache;
-          $lock->uncache("otherfile1");
-          uncache("otherfile2");
-
-        This method is used to freshen up the contents of a file across NFS,
-        ignoring what is contained in the NFS client cache. It is always
-        called from within the new constructor on the file that the lock is
-        being attempted. uncache may be used as either an object method or
-        as a stand alone subroutine.
+    This method is used to freshen up the contents of a file across NFS,
+    ignoring what is contained in the NFS client cache. It is always called
+    from within the new constructor on the file that the lock is being
+    attempted. uncache may be used as either an object method or as a stand
+    alone subroutine.
 
   newpid
+      my $pid = fork;
+      if (defined $pid) {
+        # Fork Failed
+      } elsif ($pid) {
+        $lock->newpid; # Parent
+      } else {
+        $lock->newpid; # Child
+      }
 
-          my $pid = fork;
-          if (defined $pid) {
-            # Fork Failed
-          } elsif ($pid) {
-            $lock->newpid; # Parent
-          } else {
-            $lock->newpid; # Child
-          }
-
-        If fork() is called after a lock has been aquired, then when the
-        lock object leaves scope in either the parent or child, it will be
-        released. This behavior may be inappropriate for your application.
-        To delegate ownership of the lock from the parent to the child, both
-        the parent and child process must call the newpid() method after a
-        successful fork() call. This will prevent the parent from releasing
-        the lock when unlock is called or when the lock object leaves scope.
-        This is also useful to allow the parent to fail on subsequent lock
-        attempts if the child lock is still aquired.
+    If fork() is called after a lock has been aquired, then when the lock
+    object leaves scope in either the parent or child, it will be released.
+    This behavior may be inappropriate for your application. To delegate
+    ownership of the lock from the parent to the child, both the parent and
+    child process must call the newpid() method after a successful fork()
+    call. This will prevent the parent from releasing the lock when unlock
+    is called or when the lock object leaves scope. This is also useful to
+    allow the parent to fail on subsequent lock attempts if the child lock
+    is still aquired.
 
 FAILURE
-        On failure, a global variable, $File::NFSLock::errstr, should be set
-        and should contain the cause for the failure to get a lock. Useful
-        primarily for debugging.
+    On failure, a global variable, $File::NFSLock::errstr, should be set and
+    should contain the cause for the failure to get a lock. Useful primarily
+    for debugging.
 
 LOCK_EXTENSION
-        By default File::NFSLock will use a lock file extenstion of
-        ".NFSLock". This is in a global variable
-        $File::NFSLock::LOCK_EXTENSION that may be changed to suit other
-        purposes (such as compatibility in mail systems).
+    By default File::NFSLock will use a lock file extenstion of ".NFSLock".
+    This is in a global variable $File::NFSLock::LOCK_EXTENSION that may be
+    changed to suit other purposes (such as compatibility in mail systems).
 
 BUGS
-        Notify paul@seamons.com or bbb@cpan.org if you spot anything.
+    Notify paul@seamons.com or bbb@cpan.org if you spot anything.
 
   FIFO
-
-        Locks are not necessarily obtained on a first come first serve
-        basis. Not only does this not seem fair to new processes trying to
-        obtain a lock, but it may cause a process starvation condition on
-        heavily locked files.
+    Locks are not necessarily obtained on a first come first serve basis.
+    Not only does this not seem fair to new processes trying to obtain a
+    lock, but it may cause a process starvation condition on heavily locked
+    files.
 
   DIRECTORIES
-
-        Locks cannot be obtained on directory nodes, nor can a directory
-        node be uncached with the uncache routine because hard links do not
-        work with directory nodes. Some other algorithm might be used to
-        uncache a directory, but I am unaware of the best way to do it. The
-        biggest use I can see would be to avoid NFS cache of directory
-        modified and last accessed timestamps.
+    Locks cannot be obtained on directory nodes, nor can a directory node be
+    uncached with the uncache routine because hard links do not work with
+    directory nodes. Some other algorithm might be used to uncache a
+    directory, but I am unaware of the best way to do it. The biggest use I
+    can see would be to avoid NFS cache of directory modified and last
+    accessed timestamps.
 
 INSTALL
-        Download and extract tarball before running these commands in its
-        base directory:
+    Download and extract tarball before running these commands in its base
+    directory:
 
-          perl Makefile.PL
-          make
-          make test
-          make install
+      perl Makefile.PL
+      make
+      make test
+      make install
 
-        For RPM installation, download tarball before running these commands
-        in your _topdir:
+    For RPM installation, download tarball before running these commands in
+    your _topdir:
 
-          rpm -ta SOURCES/File-NFSLock-*.tar.gz
-          rpm -ih RPMS/noarch/perl-File-NFSLock-*.rpm
+      rpm -ta SOURCES/File-NFSLock-*.tar.gz
+      rpm -ih RPMS/noarch/perl-File-NFSLock-*.rpm
 
 AUTHORS
-        Paul T Seamons (paul@seamons.com) - Performed majority of the
-        programming with copious amounts of input from Rob Brown.
+    Paul T Seamons (paul@seamons.com) - Performed majority of the
+    programming with copious amounts of input from Rob Brown.
 
-        Rob B Brown (bbb@cpan.org) - In addition to helping in the
-        programming, Rob Brown provided most of the core testing to make
-        sure implementation worked properly. He is now the current
-        maintainer.
+    Rob B Brown (bbb@cpan.org) - In addition to helping in the programming,
+    Rob Brown provided most of the core testing to make sure implementation
+    worked properly. He is now the current maintainer.
 
-        Also Mark Overmeer (mark@overmeer.net) - Author of
-        Mail::Box::Locker, from which some key concepts for File::NFSLock
-        were taken.
+    Also Mark Overmeer (mark@overmeer.net) - Author of Mail::Box::Locker,
+    from which some key concepts for File::NFSLock were taken.
 
-        Also Kevin Johnson (kjj@pobox.com) - Author of
-        Mail::Folder::Maildir, from which Mark Overmeer based
-        Mail::Box::Locker.
+    Also Kevin Johnson (kjj@pobox.com) - Author of Mail::Folder::Maildir,
+    from which Mark Overmeer based Mail::Box::Locker.
 
 COPYRIGHT
-          Copyright (C) 2001
-          Paul T Seamons
-          paul@seamons.com
-          http://seamons.com/
+      Copyright (C) 2001
+      Paul T Seamons
+      paul@seamons.com
+      http://seamons.com/
 
-          Copyright (C) 2002-2003,
-          Rob B Brown
-          bbb@cpan.org
+      Copyright (C) 2002-2003,
+      Rob B Brown
+      bbb@cpan.org
 
-          This package may be distributed under the terms of either the
-          GNU General Public License
-            or the
-          Perl Artistic License
+      This package may be distributed under the terms of either the
+      GNU General Public License
+        or the
+      Perl Artistic License
 
-          All rights reserved.
+      All rights reserved.
 
