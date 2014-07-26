@@ -3,8 +3,9 @@
 use Test::More tests => 2;
 use File::NFSLock;
 use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC LOCK_EX);
+use File::Temp qw(tempfile);
 
-my $datafile = "testfile.dat";
+my $datafile = tempfile();
 
 # Create a blank file
 sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );

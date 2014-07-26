@@ -1,6 +1,7 @@
 # Blocking Shared Lock Test
 use strict;
 use warnings;
+use File::Temp qw(tempfile);
 
 use Test::More;
 if( $^O eq 'MSWin32' ) {
@@ -18,7 +19,7 @@ my $shared_delay = 5;
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
 
-my $datafile = "testfile.dat";
+my $datafile = tempfile();
 
 # Create a blank file
 sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );

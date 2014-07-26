@@ -2,6 +2,7 @@
 
 use strict;
 use warnings;
+use File::Temp qw(tempfile);
 
 use Test::More tests => 10;
 use File::NFSLock;
@@ -9,7 +10,7 @@ use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC LOCK_EX);
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
 
-my $datafile = "testfile.dat";
+my $datafile = tempfile();
 
 # Wipe lock file in case it exists
 unlink ("$datafile$File::NFSLock::LOCK_EXTENSION");

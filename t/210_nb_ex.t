@@ -1,5 +1,6 @@
 use strict;
 use warnings;
+use File::Temp qw(tempfile);
 
 # Non-Blocking Exclusive Lock Test
 
@@ -9,7 +10,7 @@ use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC LOCK_EX LOCK_NB);
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
 
-my $datafile = "testfile.dat";
+my $datafile = tempfile();
 
 # Create a blank file
 sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );
