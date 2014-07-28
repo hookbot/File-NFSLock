@@ -273,9 +273,9 @@ sub unlock ($) {
   if (!$self->{unlocked}) {
     unlink( $self->{rand_file} ) if -e $self->{rand_file};
     if( $self->{lock_type} & LOCK_SH ){
-      return $self->do_unlock_shared;
+      $self->do_unlock_shared;
     }else{
-      return $self->do_unlock;
+      $self->do_unlock;
     }
     $self->{unlocked} = 1;
     foreach my $signal (@CATCH_SIGS) {
