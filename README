@@ -125,8 +125,8 @@ METHODS
   unlock
       $lock->unlock;
 
-    This method may be used to explicitly release a lock that is aquired. In
-    most cases, it is not necessary to call unlock directly since it will
+    This method may be used to explicitly release a lock that is acquired.
+    In most cases, it is not necessary to call unlock directly since it will
     implicitly be called when the object leaves whatever scope it is in.
 
   uncache
@@ -150,7 +150,7 @@ METHODS
         $lock->newpid; # Child
       }
 
-    If fork() is called after a lock has been aquired, then when the lock
+    If fork() is called after a lock has been acquired, then when the lock
     object leaves scope in either the parent or child, it will be released.
     This behavior may be inappropriate for your application. To delegate
     ownership of the lock from the parent to the child, both the parent and
@@ -158,7 +158,7 @@ METHODS
     call. This will prevent the parent from releasing the lock when unlock
     is called or when the lock object leaves scope. This is also useful to
     allow the parent to fail on subsequent lock attempts if the child lock
-    is still aquired.
+    is still acquired.
 
 FAILURE
     On failure, a global variable, $File::NFSLock::errstr, should be set and
@@ -166,7 +166,7 @@ FAILURE
     for debugging.
 
 LOCK_EXTENSION
-    By default File::NFSLock will use a lock file extenstion of ".NFSLock".
+    By default File::NFSLock will use a lock file extension of ".NFSLock".
     This is in a global variable $File::NFSLock::LOCK_EXTENSION that may be
     changed to suit other purposes (such as compatibility in mail systems).
 
