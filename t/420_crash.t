@@ -59,7 +59,7 @@ close ($rd1);
 # test 4
 ok ($child1_lock);
 
-# Pretend like the box crashed rudely while the lock is aquired
+# Pretend like the box crashed rudely while the lock is acquired
 # test 5
 ok (kill "KILL", $pid);
 
@@ -71,7 +71,7 @@ ok (wait);
 my ($rd2, $wr2);
 ok (pipe($rd2, $wr2)); # Connected pipe for child2
 if (!fork) {
-  # The last lock died, so this should aquire fine.
+  # The last lock died, so this should acquire fine.
   my $lock = new File::NFSLock {
     file => $datafile,
     lock_type => LOCK_EX,

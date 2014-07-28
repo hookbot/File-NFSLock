@@ -122,7 +122,7 @@ my ($rd3, $wr3);
 ok (pipe($rd3, $wr3));
 
 # Wait a few seconds less than if all locks were
-# aquired asyncronously to ensure that they overlap.
+# acquired asyncronously to ensure that they overlap.
 alarm($m*$shared_delay-2);
 
 for (my $i = 0; $i < $m ; $i++) {

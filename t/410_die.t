@@ -43,7 +43,7 @@ if (!$pid) {
     print $fh "exclusive\n";
     close $fh;
     open(STDERR,">/dev/null");
-    die "I will die while lock is still aquired";
+    die "I will die while lock is still acquired";
   }
   die "Lock failed!";
 }
@@ -67,7 +67,7 @@ ok (wait);
 my ($rd2, $wr2);
 ok (pipe($rd2, $wr2)); # Connected pipe for child2
 if (!fork) {
-  # The last lock died, so this should aquire fine.
+  # The last lock died, so this should acquire fine.
   my $lock = new File::NFSLock {
     file => $datafile,
     lock_type => LOCK_EX,

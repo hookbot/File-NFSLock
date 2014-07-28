@@ -1,6 +1,6 @@
 # Exclusive Double Lock Test
 #
-# This tests to make sure the same process can aquire
+# This tests to make sure the same process can acquire
 # an exclusive lock multiple times for the same file.
 
 use strict;
