@@ -63,7 +63,7 @@ my $graceful_sig = sub {
   print STDERR "Received SIG$_[0]\n" if @_;
   # Perl's exit should safely DESTROY any objects
   # still "alive" before calling the real _exit().
-  exit;
+  exit 1;
 };
 
 our @CATCH_SIGS = qw(TERM INT);
