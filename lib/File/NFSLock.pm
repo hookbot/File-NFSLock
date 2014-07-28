@@ -172,7 +172,7 @@ sub new {
       my $try_lock_exclusive = !($self->{lock_type} & LOCK_SH);
 
       while(defined(my $line=<$fh>)){
-        if ($line =~ /^$HOSTNAME (-?\d+) /) {
+        if ($line =~ /^\Q$HOSTNAME\E (-?\d+) /) {
           my $pid = $1;
           if ($pid == $$) {       # This is me.
             push @mine, $line;
@@ -202,7 +202,7 @@ sub new {
         seek ($fh, 0, 0);
         my $content = '';
         while(defined(my $line=<$fh>)){
-          if ($line =~ /^$HOSTNAME (-?\d+) /) {
+          if ($line =~ /^\Q$HOSTNAME\E (-?\d+) /) {
             my $pid = $1;
             next if (!kill 0, $pid);  # Skip dead locks from this host
           }
