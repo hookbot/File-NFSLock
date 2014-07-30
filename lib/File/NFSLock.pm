@@ -216,8 +216,8 @@ sub new {
           truncate $fh, length($content);
           close    $fh;
         }else{
-          close $fh;
           unlink $self->{lock_file};
+          close $fh;
         }
 
       ### No "dead" or stale locks found.
