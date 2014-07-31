@@ -1,5 +1,9 @@
 Revision history for Perl extension File::NFSLock.
 
+1.24  Jul 30 14:00 2014
+        - Fixed a race condition in crash recovery.
+        - RT#88520 Thanks David Steinbrunner: Fix typos
+
 1.23  Jul 28 11:00 2014
         - More gracefully handle arbitrary hostnames.
         - Patch RT#84658 by Yann Rouillard:
