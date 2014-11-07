@@ -215,12 +215,9 @@ sub new {
           print    $fh $content;
           truncate $fh, length($content);
           close    $fh;
-        }elsif($^O eq "MSWin32"){
-          close $fh;
-          unlink $self->{lock_file};
         }else{
-          unlink $self->{lock_file};
           close $fh;
+          unlink $self->{lock_file};
         }
 
       ### No "dead" or stale locks found.
