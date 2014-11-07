@@ -668,11 +668,11 @@ If fork() is called after a lock has been acquired,
 then when the lock object leaves scope in either
 the parent or child, it will be released.  This
 behavior may be inappropriate for your application.
-To delegate ownership of the lock from the parent
-to the child, both the parent and child process
-must call the newpid() method after a successful
-fork() call.  This will prevent the parent from
-releasing the lock when unlock is called or when
+To ensure both processes maintain ownership of the
+lock, both the parent and child process must call
+the newpid() method after a successful fork() call.
+This will prevent the parent from releasing the
+child's lock when unlock is called or when
 the lock object leaves scope.  This is also
 useful to allow the parent to fail on subsequent
 lock attempts if the child lock is still acquired.
@@ -688,16 +688,23 @@ By default File::NFSLock will use a lock file extension of ".NFSLock".  This is
 in a global variable $File::NFSLock::LOCK_EXTENSION that may be changed to
 suit other purposes (such as compatibility in mail systems).
 
+=head1 REPO
+
+The source is now on github:
+
+git clone https://github.com/hookbot/File-NFSLock
+
 =head1 BUGS
 
-Notify paul@seamons.com or bbb@cpan.org if you spot anything.
+If you spot anything, please submit a pull request on
+github and/or submit a ticket with RT:
+https://rt.cpan.org/Dist/Display.html?Queue=File-NFSLock
 
 =head2 FIFO
 
 Locks are not necessarily obtained on a first come first serve basis.
 Not only does this not seem fair to new processes trying to obtain a lock,
 but it may cause a process starvation condition on heavily locked files.
-
 
 =head2 DIRECTORIES
 
@@ -746,7 +753,7 @@ from which Mark Overmeer based Mail::Box::Locker.
   paul@seamons.com
   http://seamons.com/
 
-  Copyright (C) 2002-2003,
+  Copyright (C) 2002-2014,
   Rob B Brown
   bbb@cpan.org
 
