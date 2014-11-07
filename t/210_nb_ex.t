@@ -10,7 +10,7 @@ use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC LOCK_EX LOCK_NB);
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
 
-my ( undef, $datafile ) = tempfile();
+my $datafile = (tempfile)[1];
 
 # Create a blank file
 sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );
