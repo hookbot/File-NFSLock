@@ -1,5 +1,16 @@
 Revision history for Perl extension File::NFSLock.
 
+1.25  Nov 07 13:00 2014
+        - RT#99431 Report by Nathan Glenn:
+        - Fixed tempfile syntax by Christian Walde.
+        - Fixed Win32 Shared Lock by Christian Walde.
+        - RT#42122 Report by converter at cpan.org:
+        - Add tests to help debug Taint issues
+        - RT#48102 Report by Todd Foggoa:
+        - More gracefully handle fork() to behave like
+          Linux by sharing the lock between both parent
+          and child processes when ->newpid() is called.
+
 1.24  Jul 30 14:00 2014
         - Fixed a race condition in crash recovery.
         - RT#88520 Thanks David Steinbrunner: Fix typos
