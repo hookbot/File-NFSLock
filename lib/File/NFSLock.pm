@@ -32,7 +32,7 @@ our $errstr;
 use base 'Exporter';
 our @EXPORT_OK = qw(uncache);
 
-our $VERSION = '1.25';
+our $VERSION = '1.26';
 
 #Get constants, but without the bloat of
 #use Fcntl qw(LOCK_SH LOCK_EX LOCK_NB);
