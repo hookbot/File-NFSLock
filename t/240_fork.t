@@ -13,7 +13,7 @@ use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC O_APPEND LOCK_EX LOCK_SH LOCK_NB);
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
 
-my $datafile = tempfile();
+my ( undef, $datafile ) = tempfile();
 
 # Wipe lock file in case it exists
 unlink ("$datafile$File::NFSLock::LOCK_EXTENSION");
