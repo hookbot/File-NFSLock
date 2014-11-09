@@ -499,6 +499,19 @@ sub newpid {
   }
 }
 
+sub fork {
+  my $self = shift;
+  # Store fork response.
+  my $pid = CORE::fork();
+  if (defined $pid and !$self->{unlocked}) {
+    # Fork worked and we really have a lock to deal with
+    # So upgrade to shared lock across both parent and child
+    $self->newpid;
+  }
+  # Return original fork response
+  return $pid;
+}
+
 1;
 
 
@@ -669,29 +682,45 @@ the new constructor on the file that the lock is
 being attempted.  uncache may be used as either an
 object method or as a stand alone subroutine.
 
+=head2 fork
+
+  my $pid = $lock->fork;
+  if (!defined $pid) {
+    # Fork Failed
+  } elsif ($pid) {
+    # Parent ...
+  } else {
+    # Child ...
+  }
+
+fork() is a convenience method that acts just like the normal
+CORE::fork() except it safely ensures the lock is retained
+within both parent and child processes. WITHOUT this, then when
+either the parent or child process releases the lock, then the
+entire lock will be lost, allowing external processes to
+re-acquire a lock on the same file, even if the other process
+still has the lock object in scope. This can cause corruption
+since both processes might think they have exclusive access to
+the file.
+
 =head2 newpid
 
   my $pid = fork;
-  if (defined $pid) {
+  if (!defined $pid) {
     # Fork Failed
   } elsif ($pid) {
-    $lock->newpid; # Parent
+    $lock->newpid;
+    # Parent ...
   } else {
-    $lock->newpid; # Child
+    $lock->newpid;
+    # Child ...
   }
 
-If fork() is called after a lock has been acquired,
-then when the lock object leaves scope in either
-the parent or child, it will be released.  This
-behavior may be inappropriate for your application.
-To ensure both processes maintain ownership of the
-lock, both the parent and child process must call
-the newpid() method after a successful fork() call.
-This will prevent the parent from releasing the
-child's lock when unlock is called or when
-the lock object leaves scope.  This is also
-useful to allow the parent to fail on subsequent
-lock attempts if the child lock is still acquired.
+The newpid() synopsis shown above is equivalent to the
+one used for the fork() method, but it's not intended
+to be called directly. It is called internally by the
+fork() method. To be safe, it is recommended to use
+$lock->fork() from now on.
 
 =head1 FAILURE
 
