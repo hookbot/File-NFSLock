@@ -1,7 +1,7 @@
 # Shared Fork Test
 #
 # This tests the capabilities of fork after lock to
-# ensure both parent and child retain the shared lock.
+# ensure child retains shared lock even if parent releases it.
 
 use strict;
 use warnings;
