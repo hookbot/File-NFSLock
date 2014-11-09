@@ -456,26 +456,42 @@ sub newpid {
       select(undef,undef,undef,0.1);
     }
 
-    # Fake the parent into thinking it is already
-    # unlocked because the child will take care of it.
-    $self->{unlocked} = 1;
+    # Child finished running newpid() and acquired shared lock
+    # So now we're safe to continue without risk of
+    # blowing away the lock prematurely.
+    unless ( $self->{lock_type} & LOCK_SH ) {
+      # If it's not already a SHared lock, then
+      # just switch it from EXclusive to SHared
+      # from this process's point of view.
+      # Then the child will still hold the lock
+      # if the parent releases it first.
+      # (Don't chmod the lock file.)
+      $self->{lock_type} |= LOCK_SH;
+    }
   } else {
     # This is the new child
 
-    # The lock_line found in the lock_file contents
-    # must be modified to reflect the new pid.
-
     # Fix lock_pid to the new pid.
     $self->{lock_pid} = $$;
-    # Backup the old lock_line.
-    my $old_line = $self->{lock_line};
+
+    # We can leave the old lock_line in the lock_file
+    # But we need to add the new lock_line for this pid.
+
     # Clear lock_line to create a fresh one.
     delete $self->{lock_line};
     # Append a new lock_line to the lock_file.
     $self->create_magic($self->{lock_file});
-    # Remove the old lock_line from lock_file.
-    local $self->{lock_line} = $old_line;
-    $self->do_unlock_shared;
+
+    unless ( $self->{lock_type} & LOCK_SH ) {
+      # If it's not already a SHared lock, then
+      # just switch it from EXclusive to SHared
+      # from this process's point of view.
+      # Then the parent will still hold the lock
+      # if this child releases it first.
+      # (Don't chmod the lock file.)
+      $self->{lock_type} |= LOCK_SH;
+    }
+
     # Create signal file to notify parent that
     # the lock_line entry has been delegated.
     open (my $fh, '>', "$self->{lock_file}.fork");
