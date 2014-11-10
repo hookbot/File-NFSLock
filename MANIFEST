@@ -16,8 +16,12 @@ t/220_ex_scope.t
 t/230_double.t
 t/240_fork_ex.t
 t/241_fork_ex.t
+t/242_fork_ex.t
+t/243_fork_ex.t
 t/250_fork_sh.t
 t/251_fork_sh.t
+t/252_fork_sh.t
+t/253_fork_sh.t
 t/300_bl_sh.t
 t/400_kill.t
 t/410_die.t
