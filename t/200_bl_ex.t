@@ -20,7 +20,7 @@ my $n = 50;
 
 $| = 1; # Buffer must be autoflushed because of fork() below.
 
-my $datafile = (tempfile)[1];
+my $datafile = (tempfile 'XXXXXXXXXX')[1];
 
 # Create a blank file
 sysopen ( my $fh, $datafile, O_CREAT | O_RDWR | O_TRUNC );

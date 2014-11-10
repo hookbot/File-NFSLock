@@ -13,7 +13,7 @@ use Fcntl qw(O_CREAT O_RDWR O_RDONLY O_TRUNC O_APPEND LOCK_EX LOCK_SH LOCK_NB);
 
 $| = 1;
 
-my $datafile = (tempfile)[1];
+my $datafile = (tempfile 'XXXXXXXXXX')[1];
 
 # Wipe lock file in case it exists
 unlink ("$datafile$File::NFSLock::LOCK_EXTENSION");
