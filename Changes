@@ -1,5 +1,11 @@
 Revision history for Perl extension File::NFSLock.
 
+1.27  Nov 12 13:00 2014
+        - RT#99431:
+        - More Win32 compatibility fixes in test suite.
+        - RT#48102:
+        - Add tests for new ->fork() method.
+
 1.26  Nov 07 16:00 2014
         - Add File::NFSLock->fork() convenience method.
         - RT#48102 Report by Todd Foggoa:
