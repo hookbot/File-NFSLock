@@ -19,7 +19,7 @@ sub WriteMakefile {
     elsif (my $version_from = $props{VERSION_FROM}) {
         $@ = "";
         $version = eval qq{
-            do "$version_from";
+            do "./$version_from";
             \$$name\::VERSION || die "$version_from: Missing VERSION";
         };
         die $@ if $@;
