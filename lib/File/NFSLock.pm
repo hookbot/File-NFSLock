@@ -798,7 +798,7 @@ from which Mark Overmeer based Mail::Box::Locker.
   paul@seamons.com
   http://seamons.com/
 
-  Copyright (C) 2002-2014,
+  Copyright (C) 2002-2018,
   Rob B Brown
   bbb@cpan.org
 
